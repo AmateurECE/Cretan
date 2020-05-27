@@ -12,7 +12,7 @@
 
 from . import Discord
 
-streamMapping = {
+STREAMS = {
     'DISCORD': Discord.DiscordFactory,
 }
 

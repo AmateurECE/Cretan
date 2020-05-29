@@ -7,13 +7,13 @@
 #
 # CREATED:          05/27/2020
 #
-# LAST EDITED:      05/27/2020
+# LAST EDITED:      05/28/2020
 ###
 
 from . import Discord
 
 STREAMS = {
-    'DISCORD': Discord.DiscordFactory,
+    'DISCORD': lambda: Discord.Discord(),
 }
 
 ###############################################################################

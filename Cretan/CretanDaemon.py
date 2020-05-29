@@ -15,7 +15,6 @@ import asyncio
 from configparser import ConfigParser
 import json
 import argparse
-import sys
 
 import Service
 
@@ -43,15 +42,15 @@ class MessageDispatcher:
 
 class Stream:
 
-    def __init__(self, dictionary):
-        self.name = dictionary['name']
+    def __init__(self, name, dictionary):
+        self.name = name
         self.handler = Service.STREAMS[dictionary['mechanism'].upper()]()
 
     def getName(self):
         return self.name
 
     async def writeMessage(self, message):
-        await self.handler.write(message)
+        return await self.handler.write(message)
 
 ###############################################################################
 # Class CretanUdpProtocol
@@ -134,11 +133,13 @@ def getConfiguration(confFile):
             return config
 
 def getStreams(streamFile):
-    streams = []
+    streams = {}
     try:
         with open(streamFile, 'r') as inFile:
-            for stream in json.load(inFile):
-                streams.append(Stream(stream))
+            streamsFromFile = json.load(inFile)
+            for streamName in streamsFromFile:
+                streams[streamName] = Stream(
+                    streamName, streamsFromFile[streamName])
     except FileNotFoundError:
         with open(streamFile, 'w') as outFile:
             json.dump([], outFile)
@@ -157,7 +158,7 @@ async def main():
     config = getConfiguration(arguments['conf'])
     streams = getStreams(arguments['streams'])
 
-    broker = UdpBroker(('127.0.0.1', 13001))
+    broker = UdpBroker((config['udp']['address'], config['udp']['port']))
     dispatcher = MessageDispatcher(streams)
     await broker.start(dispatcher)
 

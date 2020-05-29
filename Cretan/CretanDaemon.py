@@ -8,18 +8,16 @@
 #
 # CREATED:          05/26/2020
 #
-# LAST EDITED:      05/27/2020
+# LAST EDITED:      05/28/2020
 ###
 
-from threading import Thread
-from queue import Queue
+import asyncio
 from configparser import ConfigParser
 import json
 import argparse
 import sys
 
 import Service
-from protocol import Udp
 
 ###############################################################################
 # Class MessageDispatcher
@@ -27,24 +25,17 @@ from protocol import Udp
 
 class MessageDispatcher:
 
-    def __init__(self, streams, queue):
+    def __init__(self, streams):
         self.streams = streams
-        self.queue = queue
 
-    def validateMessage(self, message):
-        if message['stream'] not in self.streams:
-            print(('{} attempted to send a message to stream {}, but no'
-                   ' such stream exists.').format(message['source'],
-                                                  message['stream']),
-                  file=sys.stderr)
+    def isValidStream(self, stream):
+        return stream in self.streams
 
-    def start(self):
-        print('Listening for messages...')
-        while True:
-            message = self.queue.get()
-            if not self.validateMessage(message):
-                continue
-            self.streams[message['stream']].writeMessage(message['message'])
+    async def dispatch(self, message, transport):
+        theStream = self.streams[message['stream']]
+        response = await theStream.writeMessage(message['message'])
+        if message['responseRequested']:
+            transport.sendto(response.encode('utf-8'), message['address'])
 
 ###############################################################################
 # Class Stream
@@ -59,46 +50,75 @@ class Stream:
     def getName(self):
         return self.name
 
-    def writeMessage(self, message):
-        self.handler.write(message)
+    async def writeMessage(self, message):
+        await self.handler.write(message)
 
 ###############################################################################
-# Class UDPListener
+# Class CretanUdpProtocol
 ###
 
-class UDPListener(Thread):
+class CretanUdpProtocol:
+    def __init__(self, dispatcher):
+        self.dispatcher = dispatcher
 
-    def __init__(self, queue, address):
-        super().__init__()
-        self.queue = queue
+    def connection_made(self, transport):
+        self.transport = transport
+
+    def validateMessage(self, message):
+        if not self.dispatcher.isValidStream(message['stream']):
+            return False, "-No such stream"
+        if message['responseRequested'] != 'False' \
+           and message['responseRequested'] != 'True':
+            return False, "-Incorrect value (field: responseRequested)"
+        return True, "+Ok"
+
+    def datagram_received(self, data, address):
+        components = data.decode().split('\n')
+        if len(components) < 4:
+            error = '-Format error'
+            self.transport.sendto(error.encode('utf-8'), address)
+            return
+        message = {
+            'source': components[0],
+            'address': address,
+            'stream': components[1],
+            'responseRequested': components[2],
+            'message': components[3],
+        }
+        isValid, error = self.validateMessage(message)
+        if not isValid:
+            if message['responseRequested'] == 'True':
+                self.transport.sendto(error.encode('utf-8'), address)
+            return
+        asyncio.create_task(self.dispatcher.dispatch(message, self.transport))
+
+###############################################################################
+# Class UdpBroker
+###
+
+class UdpBroker:
+
+    def __init__(self, address):
         self.address = address
 
-    def handleMessage(self, payload, address):
-        print('Received message: "{}"'.format(payload))
-        message = {}
-        components = payload.split('\n')
-        if len(components) < 3:
-            return '-Formatting error'
-        message['source'] = components[0]
-        message['stream'] = components[1]
-        message['message'] = '\n'.join(components[2:])
-        self.queue.put(message)
-        return "+Ok"
+    async def start(self, dispatcher):
+        loop = asyncio.get_running_loop()
 
-    def run(self):
-        with Udp.Server(self.handleMessage, self.address) as server:
-            print('Starting server...')
-            server.start()
+        # This null future allows us to put this task to sleep eternally.
+        onConnectionLost = loop.create_future()
+
+        transport, protocol = await loop.create_datagram_endpoint(
+            lambda: CretanUdpProtocol(dispatcher),
+            local_addr=self.address)
+
+        try:
+            await onConnectionLost
+        finally:
+            transport.close()
 
 ###############################################################################
 # Main
 ###
-
-def getUdpListener(config, queue):
-    if 'udp' not in config:
-        raise RuntimeError('No listeners defined in configuration file.')
-    address = (config['udp']['address'], int(config['udp']['port']))
-    return UDPListener(queue, address)
 
 def getConfiguration(confFile):
     config = ConfigParser()
@@ -132,23 +152,16 @@ def parseArgs():
                         default='streams.json')
     return parser.parse_args()
 
-def main():
-
+async def main():
     arguments = vars(parseArgs())
     config = getConfiguration(arguments['conf'])
     streams = getStreams(arguments['streams'])
 
-    messageQueue = Queue()
-
-    # Create the listening thread
-    listener = getUdpListener(config, messageQueue)
-    listener.start()
-
-    # Begin dispatching messages
-    dispatcher = MessageDispatcher(streams, messageQueue)
-    dispatcher.start()
+    broker = UdpBroker(('127.0.0.1', 13001))
+    dispatcher = MessageDispatcher(streams)
+    await broker.start(dispatcher)
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
 
 ###############################################################################

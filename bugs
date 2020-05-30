@@ -1,0 +1,6 @@
+./Cretan/CretanDaemon.py: Allow naming of services | id:1632df336a91a003d4c7e276493a3a5aebac9534
+./Cretan/CretanDaemon.py: Change default values for conf files | id:77e2c4b220b1e7661fdae4cf324874a86c12bccc
+./Cretan/Cretan.py: Change the default value for conf file path | id:a6a9c8e72bd9437479173cedd5228bf12780674d
+./Cretan/CretanDaemon.py: Rename this file to just 'Daemon' | id:d237193a0719133925f63936425959f025d28c25
+./Cretan/CretanDaemon.py: Add some print statements for logging | id:e4a20f2042abcb004fca11a071a1a8a5b1e47edc
+./Cretan/Client/Datagram.py: Put message parsing/creating logic into one place. | id:e90cb3c5e7dc3c6a196620e6e86addafb8a9057c

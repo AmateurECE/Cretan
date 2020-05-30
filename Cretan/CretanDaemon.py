@@ -8,8 +8,10 @@
 #
 # CREATED:          05/26/2020
 #
-# LAST EDITED:      05/28/2020
+# LAST EDITED:      05/30/2020
 ###
+
+# TODO: Rename this file to just 'Daemon'
 
 import asyncio
 from configparser import ConfigParser
@@ -59,6 +61,7 @@ class Stream:
 class CretanUdpProtocol:
     def __init__(self, dispatcher):
         self.dispatcher = dispatcher
+        self.transport = None
 
     def connection_made(self, transport):
         self.transport = transport
@@ -71,6 +74,7 @@ class CretanUdpProtocol:
             return False, "-Incorrect value (field: responseRequested)"
         return True, "+Ok"
 
+    # TODO: Add some print statements for logging
     def datagram_received(self, data, address):
         components = data.decode().split('\n')
         if len(components) < 4:
@@ -86,7 +90,7 @@ class CretanUdpProtocol:
         }
         isValid, error = self.validateMessage(message)
         if not isValid:
-            if message['responseRequested'] == 'True':
+            if message['responseRequested'] != 'False':
                 self.transport.sendto(error.encode('utf-8'), address)
             return
         asyncio.create_task(self.dispatcher.dispatch(message, self.transport))
@@ -142,10 +146,16 @@ def getStreams(streamFile):
                     streamName, streamsFromFile[streamName])
     except FileNotFoundError:
         with open(streamFile, 'w') as outFile:
-            json.dump([], outFile)
+            json.dump({}, outFile)
     return streams
 
 def parseArgs():
+    # TODO: Change default values for conf files
+    # TODO: Allow naming of services
+    #   Currently, clients cannot connect to a service on a separate host if
+    #   there is a daemon running on the current host that has exposed the same
+    #   service. Allow users to name services, to distinguish them from their
+    #   mechanism.
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--conf', help=('The configuration file'),
                         default='conf.ini')

@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+###############################################################################
+# NAME:             cretan-send
+#
+# AUTHOR:           Ethan D. Twardy <edtwardy@mtu.edu>
+#
+# DESCRIPTION:      Command line client for the Cretan system.
+#
+# CREATED:          05/29/2020
+#
+# LAST EDITED:      05/30/2020
+###
+
+import argparse
+import asyncio
+
+from Cretan import getService, Message
+
+def parseArgs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('service', help=('The service to use to communicate'
+                                         ' with the daemon'))
+    parser.add_argument('stream', help=('The stream to send the message to'))
+    parser.add_argument('message', help=('The content of the message'))
+    parser.add_argument('-s', '--sender', help=('Sender indication (appears in'
+                                                ' message header)'),
+                        default="cli")
+    return parser.parse_args()
+
+async def main():
+    arguments = parseArgs()
+    service = getService(arguments.service)
+    message = Message(arguments.message, sender=arguments.sender,
+                      responseRequested=True)
+    await service.send(message, arguments.stream)
+
+if __name__ == '__main__':
+    asyncio.run(main())
+
+###############################################################################

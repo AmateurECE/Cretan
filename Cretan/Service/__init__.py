@@ -7,13 +7,25 @@
 #
 # CREATED:          05/27/2020
 #
-# LAST EDITED:      05/28/2020
+# LAST EDITED:      05/30/2020
 ###
 
-from . import Discord
+from .DiscordService import DiscordService, DiscordStreamHandler
 
-STREAMS = {
-    'DISCORD': lambda: Discord.Discord(),
+SERVICES = {
+    'DISCORD': lambda config: DiscordService(config['token'])
 }
+
+STREAM_HANDLERS = {
+    'DISCORD': lambda service, config: DiscordStreamHandler(
+        service, config['guild'], config['channel'])
+}
+
+RECOGNIZED_SERVICES = [
+    'DISCORD',
+]
+
+def getRecognizedServices():
+    return RECOGNIZED_SERVICES
 
 ###############################################################################

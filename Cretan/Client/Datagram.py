@@ -12,7 +12,7 @@
 
 import asyncio
 
-from .ServiceCommon import getSenderString
+from .ClientCommon import getSenderString
 
 class CretanDatagramProtocol:
 
@@ -48,7 +48,7 @@ class CretanDatagramProtocol:
     def error_received(self, exc):
         self.onConnectionLost.set_result(
             {'hasResult': True, 'result': str(exc)})
-        raise
+        raise exc
 
     def connection_lost(self, exc):
         if exc is None and not self.onConnectionLost.done():

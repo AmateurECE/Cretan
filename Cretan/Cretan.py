@@ -22,8 +22,8 @@ def getService(serviceName, confFile="conf.ini"):
     confFile: The path of the confFile that the server is configured from.
     """
     conf = configparser.ConfigParser()
-    if not len(conf.read(confFile)):
-        raise OSError(2, 'No such file ' + confFile)
+    if not conf.read(confFile):
+        raise FileNotFoundError(confFile)
     if serviceName not in conf:
         raise ValueError(f'No such service {serviceName} in {confFile}')
     return Client.CLIENTS[serviceName](conf[serviceName])

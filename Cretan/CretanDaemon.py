@@ -15,7 +15,6 @@
 
 import asyncio
 from configparser import ConfigParser
-import json
 import argparse
 
 import Service
@@ -34,7 +33,8 @@ class MessageDispatcher:
 
     async def dispatch(self, message, transport):
         theStream = self.streams[message['stream']]
-        response = await theStream.writeMessage(message['message'])
+        # TODO: Make message a class
+        response = await theStream.writeMessage(message)
         if message['responseRequested']:
             transport.sendto(response.encode('utf-8'), message['address'])
 
@@ -44,15 +44,19 @@ class MessageDispatcher:
 
 class Stream:
 
-    def __init__(self, name, dictionary):
+    def __init__(self, service, name, mechanism, config):
         self.name = name
-        self.handler = Service.STREAMS[dictionary['mechanism'].upper()]()
+        self.handler = Service.STREAM_HANDLERS[mechanism.upper()](
+            service, config)
 
     def getName(self):
         return self.name
 
     async def writeMessage(self, message):
         return await self.handler.write(message)
+
+    async def start(self, loop):
+        return await self.handler.start(loop)
 
 ###############################################################################
 # Class CretanUdpProtocol
@@ -86,7 +90,7 @@ class CretanUdpProtocol:
             'address': address,
             'stream': components[1],
             'responseRequested': components[2],
-            'message': components[3],
+            'message': '\n'.join(components[3:]),
         }
         isValid, error = self.validateMessage(message)
         if not isValid:
@@ -126,9 +130,9 @@ class UdpBroker:
 def getConfiguration(confFile):
     config = ConfigParser()
     try:
-        with open(confFile, 'r') as inFile:
-            config.read(confFile)
-            return config
+        if not config.read(confFile):
+            raise FileNotFoundError(confFile)
+        return config
     except FileNotFoundError:
         with open(confFile, 'w') as outFile:
             config['daemon'] = {}
@@ -136,17 +140,29 @@ def getConfiguration(confFile):
             config.write(outFile)
             return config
 
-def getStreams(streamFile):
+def getServices(config):
+    recognizedServices = Service.getRecognizedServices()
+    services = {}
+    for name in config:
+        if name.upper() in recognizedServices:
+            services[name] = Service.SERVICES[name.upper()](config[name])
+    return services
+
+def getStreams(streamFile, services):
     streams = {}
     try:
-        with open(streamFile, 'r') as inFile:
-            streamsFromFile = json.load(inFile)
-            for streamName in streamsFromFile:
-                streams[streamName] = Stream(
-                    streamName, streamsFromFile[streamName])
+        streamConfig = ConfigParser()
+        if not streamConfig.read(streamFile):
+            raise FileNotFoundError(streamFile)
+        for entry in streamConfig:
+            if entry == 'DEFAULT':
+                continue
+            name, mechanism = entry.split(':')
+            streams[name] = Stream(services[mechanism], name, mechanism,
+                                   streamConfig[entry])
     except FileNotFoundError:
-        with open(streamFile, 'w') as outFile:
-            json.dump({}, outFile)
+        newStreamFile = open(streamFile, 'w')
+        newStreamFile.close()
     return streams
 
 def parseArgs():
@@ -156,19 +172,36 @@ def parseArgs():
     #   there is a daemon running on the current host that has exposed the same
     #   service. Allow users to name services, to distinguish them from their
     #   mechanism.
+    # TODO: Create service configuration in config file
+    #   The discord service requires an API token, which must currently be
+    #   placed in every stream declaration in streams.ini. Create a more robust
+    #   system that declares configuration for services like so:
+    #
+    #   conf.ini:
+    #     [discord]
+    #     token = MyToken
+    #
+    #   streams.ini:
+    #     [mystream:discord]
+    #     (...)
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--conf', help=('The configuration file'),
                         default='conf.ini')
     parser.add_argument('-s', '--streams', help=('The streams file'),
-                        default='streams.json')
+                        default='streams.ini')
     return parser.parse_args()
 
 async def main():
     arguments = vars(parseArgs())
     config = getConfiguration(arguments['conf'])
-    streams = getStreams(arguments['streams'])
+    services = getServices(config)
+
+    # initialize services
+    for key in services:
+        await services[key].start()
 
     broker = UdpBroker((config['udp']['address'], config['udp']['port']))
+    streams = getStreams(arguments['streams'], services)
     dispatcher = MessageDispatcher(streams)
     await broker.start(dispatcher)
 

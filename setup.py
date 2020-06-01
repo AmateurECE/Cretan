@@ -22,6 +22,7 @@ setuptools.setup(
         'discord.py',
         'psutil',
         'discord',
+        'appdirs',
     ],
     provides=['cretan'],
     scripts=['scripts/cretan-daemon', 'scripts/cretan-send'],

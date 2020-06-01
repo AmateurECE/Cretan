@@ -7,20 +7,24 @@
 #
 # CREATED:          05/29/2020
 #
-# LAST EDITED:      05/30/2020
+# LAST EDITED:      06/01/2020
 ###
 
 import configparser
+import os.path
+import appdirs
 
 from . import Client
 
-# TODO: Change the default value for conf file path
-def getService(serviceName, confFile="conf.ini"):
+def getService(serviceName, confFile=None):
     """A Service is used to send messages to the server.
     serviceName: The name of the configured listener on the server-side
         (e.g. udp);
     confFile: The path of the confFile that the server is configured from.
     """
+    if not confFile:
+        confFile = os.path.join(
+            appdirs.user_config_dir('cretan'), 'daemon.ini')
     conf = configparser.ConfigParser()
     if not conf.read(confFile):
         raise FileNotFoundError(confFile)

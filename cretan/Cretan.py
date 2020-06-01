@@ -24,7 +24,7 @@ def getService(serviceName, confFile=None):
     """
     if not confFile:
         confFile = os.path.join(
-            appdirs.user_config_dir('cretan'), 'daemon.ini')
+            appdirs.user_config_dir('cretan'), 'client.ini')
     conf = configparser.ConfigParser()
     if not conf.read(confFile):
         raise FileNotFoundError(confFile)

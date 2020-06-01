@@ -169,7 +169,9 @@ def getStreams(streamFile, services):
     return streams
 
 def parseArgs():
-    # TODO: Change default values for conf files
+    # TODO: Add uninstall command
+    #   This command would delete configuration files which can't be deleted by
+    #   setuptools.
     # TODO: Allow naming of services
     #   Currently, clients cannot connect to a service on a separate host if
     #   there is a daemon running on the current host that has exposed the same

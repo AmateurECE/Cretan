@@ -1,7 +1,7 @@
 ./cretan/Daemon.py: Allow naming of services | id:20814bdebd2ed11e812aa90dd81e7b79914a6174
+./cretan/Daemon.py: Add uninstall command | id:26969ae710822b5e7acfb67630aad239dbe26c53
 ./cretan/Daemon.py: Add some print statements for logging | id:308637734b4fb7970ebae82e5b5c5e7aec60e5b7
 ./cretan/Client/Datagram.py: Put message parsing/creating logic into one place. | id:3f38c94d97be2a69a001bde8469acc92c71f78c6
 ./cretan/Daemon.py: Make message a class | id:42ecba47012fdd057d28c12b36cb112310d02607
 ./cretan/Daemon.py: Move UdpBroker to Service module. | id:4ec35bc64e4c5692f9b6dc5023db2453279f4d72
 ./cretan/Daemon.py: Add option to print configuration file paths. | id:6dfd1e0f537bb14be9c0fc39bb74590541baee72
-./cretan/Daemon.py: Change default values for conf files | id:cc0275c2b5e699c63bec28bd41bf1e89838fdb49

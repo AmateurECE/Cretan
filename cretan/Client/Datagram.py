@@ -86,9 +86,9 @@ class Datagram:
         loop = asyncio.get_running_loop()
         onConnectionLost = loop.create_future()
 
-        transport, protocol = await loop.create_datagram_endpoint(
+        transport = (await loop.create_datagram_endpoint(
             lambda: CretanDatagramProtocol(message, stream, onConnectionLost),
-            remote_addr=((self.address, self.port)))
+            remote_addr=((self.address, self.port))))[0]
 
         try:
             return await self.handleResponse(

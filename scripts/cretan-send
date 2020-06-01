@@ -8,13 +8,13 @@
 #
 # CREATED:          05/29/2020
 #
-# LAST EDITED:      05/30/2020
+# LAST EDITED:      06/01/2020
 ###
 
 import argparse
 import asyncio
 
-from Cretan import getService, Message
+from cretan import getService, Message
 
 def parseArgs():
     parser = argparse.ArgumentParser()

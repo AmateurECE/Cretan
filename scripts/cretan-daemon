@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ###############################################################################
 # NAME:             CretanDaemon.py
 #
@@ -8,7 +9,7 @@
 #
 # CREATED:          05/26/2020
 #
-# LAST EDITED:      05/30/2020
+# LAST EDITED:      06/01/2020
 ###
 
 # TODO: Rename this file to just 'Daemon'
@@ -17,7 +18,7 @@ import asyncio
 from configparser import ConfigParser
 import argparse
 
-import Service
+from cretan import Service
 
 ###############################################################################
 # Class MessageDispatcher
@@ -114,9 +115,9 @@ class UdpBroker:
         # This null future allows us to put this task to sleep eternally.
         onConnectionLost = loop.create_future()
 
-        transport, protocol = await loop.create_datagram_endpoint(
+        transport = (await loop.create_datagram_endpoint(
             lambda: CretanUdpProtocol(dispatcher),
-            local_addr=self.address)
+            local_addr=self.address))[0]
 
         try:
             await onConnectionLost
@@ -172,18 +173,7 @@ def parseArgs():
     #   there is a daemon running on the current host that has exposed the same
     #   service. Allow users to name services, to distinguish them from their
     #   mechanism.
-    # TODO: Create service configuration in config file
-    #   The discord service requires an API token, which must currently be
-    #   placed in every stream declaration in streams.ini. Create a more robust
-    #   system that declares configuration for services like so:
-    #
-    #   conf.ini:
-    #     [discord]
-    #     token = MyToken
-    #
-    #   streams.ini:
-    #     [mystream:discord]
-    #     (...)
+    # TODO: Move UdpBroker to Service module.
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--conf', help=('The configuration file'),
                         default='conf.ini')

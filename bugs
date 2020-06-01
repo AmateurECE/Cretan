@@ -1,6 +1,8 @@
-./Cretan/CretanDaemon.py: Allow naming of services | id:1632df336a91a003d4c7e276493a3a5aebac9534
-./Cretan/CretanDaemon.py: Change default values for conf files | id:77e2c4b220b1e7661fdae4cf324874a86c12bccc
-./Cretan/Cretan.py: Change the default value for conf file path | id:a6a9c8e72bd9437479173cedd5228bf12780674d
-./Cretan/CretanDaemon.py: Rename this file to just 'Daemon' | id:d237193a0719133925f63936425959f025d28c25
-./Cretan/CretanDaemon.py: Add some print statements for logging | id:e4a20f2042abcb004fca11a071a1a8a5b1e47edc
-./Cretan/Client/Datagram.py: Put message parsing/creating logic into one place. | id:e90cb3c5e7dc3c6a196620e6e86addafb8a9057c
+./scripts/cretan-daemon: Change default values for conf files | id:065fd9b3a71d2415689cf5840face25f49fc4942
+./scripts/cretan-daemon: Move UdpBroker to Service module. | id:3070e41637fc54067ade57a1eeb63941b28830d0
+./cretan/Client/Datagram.py: Put message parsing/creating logic into one place. | id:3f38c94d97be2a69a001bde8469acc92c71f78c6
+./scripts/cretan-daemon: Add some print statements for logging | id:721d981314066fd813a97675e28f64ba4f79f5b0
+./scripts/cretan-daemon: Make message a class | id:d379d62ffc8db02dffbda1ad2a4214eb6fc62871
+./scripts/cretan-daemon: Allow naming of services | id:de627621566ccf8dafd0166154607e3ad975cdac
+./scripts/cretan-daemon: Rename this file to just 'Daemon' | id:e9a38c91de589f23029047ec265feb8c11ea8223
+./cretan/Cretan.py: Change the default value for conf file path | id:f8218545d1c685d51ee53bb475b4bcae48785757

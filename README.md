@@ -47,6 +47,14 @@ future, many mechanisms will be supported, such as:
 * HTTPS
 * MQTT
 * Firebase Cloud Messaging
+* Email
 
 ## Installing
 
+This repository is currently hosted on a private PyPI server. Once it has
+reached a stable state, it may be uploaded to the central PyPI. To install
+using pip, specify the index url:
+
+```
+pip install --user --index-url https://edtwardy.hopto.org:443/pypi cretan
+```

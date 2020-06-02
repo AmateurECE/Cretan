@@ -9,7 +9,7 @@
 #
 # CREATED:          05/26/2020
 #
-# LAST EDITED:      06/01/2020
+# LAST EDITED:      06/02/2020
 ###
 
 import asyncio
@@ -185,7 +185,6 @@ def parseArgs():
         os.mkdir(configurationDirectory)
     configDefault = os.path.join(configurationDirectory, 'daemon.ini')
     streamsDefault = os.path.join(configurationDirectory, 'streams.ini')
-    print(f'{configDefault}, {streamsDefault}')
     parser.add_argument('-c', '--conf', help=('The configuration file'),
                         default=configDefault)
     parser.add_argument('-s', '--streams', help=('The streams file'),
